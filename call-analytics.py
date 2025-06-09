@@ -94,7 +94,7 @@ else:
             BASE_URL = "https://azure-openai-deployment-agents.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2025-01-01-preview"
             HEADERS = {
                 "Content-Type": "application/json",
-                "api-key": "api-key": st.secrets["USER_CREDENTIALS"]["azure_openai_key"]
+                "api-key": st.secrets["USER_CREDENTIALS"]["azure_openai_key"]
             }
             response = requests.post(
                 BASE_URL,
