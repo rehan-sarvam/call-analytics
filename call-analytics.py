@@ -113,7 +113,7 @@ else:
             else:
                 try:
                     content = response.json()
-                    st.code(json.dumps(content, indent=2), language="json")
+                    #st.code(json.dumps(content, indent=2), language="json")
                     model_output = content.get("choices", [{}])[0].get("message", {}).get("content", "").strip('`json').strip('`').strip()
                     steps_json = json.loads(model_output)
                     questions = steps_json.get("questions", [])
