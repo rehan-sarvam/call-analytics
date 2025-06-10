@@ -8,7 +8,7 @@ import copy
 import io
 import hashlib
 
-st.title("Call Analytics Creation with Sarvam")
+st.title("Call Analytics with Sarvam")
 
 # --- Authentication using st.secrets ---
 USER_CREDENTIALS = st.secrets["USER_CREDENTIALS"]
