@@ -9,32 +9,6 @@ import traceback
 import copy
 import io
 import hashlib
-
-st.title("Call Analytics with Sarvam")
-
-# --- Authentication using st.secrets ---
-USER_CREDENTIALS = st.secrets["USER_CREDENTIALS"]
-
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-with st.sidebar:
-    st.header("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    login_button = st.button("Login")
-
-if login_button:
-    if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
-        st.session_state["authenticated"] = True
-        st.success(f"Welcome, {username}!")
-    else:
-        st.error("Invalid username or password")
-
-if not st.session_state.get("authenticated", False):
-    st.stop()
-
-
 # --- 2. Upload CSV & Select Calls ---
 st.header("1. Upload Interaction CSV")
 
@@ -94,7 +68,7 @@ else:
             BASE_URL = "https://azure-openai-deployment-agents.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2025-01-01-preview"
             HEADERS = {
                 "Content-Type": "application/json",
-                "api-key": st.secrets["USER_CREDENTIALS"]["azure_openai_key"]
+                "api-key": st.secrets.get("azure_openai_key", "")
             }
             response = requests.post(
                 BASE_URL,
@@ -113,7 +87,7 @@ else:
             else:
                 try:
                     content = response.json()
-                    #st.code(json.dumps(content, indent=2), language="json")
+                    st.code(json.dumps(content, indent=2), language="json")
                     model_output = content.get("choices", [{}])[0].get("message", {}).get("content", "").strip('`json').strip('`').strip()
                     steps_json = json.loads(model_output)
                     questions = steps_json.get("questions", [])
@@ -138,6 +112,7 @@ st.markdown("---")
 st.subheader("Optional Automated Checks")
 add_asr = st.checkbox("Check ASR performance (add ASR validation question)")
 add_dis = st.checkbox("Validate dispositions (add disposition validation question)")
+add_summary = st.checkbox("Add summary question (concise summary, duration reason, and success)")
 
 # Define the ASR and Disposition questions
 asr_question = {
@@ -151,14 +126,22 @@ dis_question = {
     "type": "boolean"
 }
 
+# Define new questions: summary only (covers duration and success)
+summary_question = {
+    "id": "q_summary",
+    "text": "Provide a concise summary of the call, highlighting the main points, why the call lasted as long as it did, and whether it was successful in achieving its intended outcome.",
+    "type": "short answer"
+}
+
 # Add selected questions to the end of the list and update steps_json
 if add_asr and (not any(q.get('id') == 'q_asr' for q in questions)):
     questions.append(asr_question)
 if add_dis and (not any(q.get('id') == 'q_dis' for q in questions)):
     questions.append(dis_question)
-
+if add_summary and (not any(q.get('id') == 'q_summary' for q in questions)):
+    questions.append(summary_question)
 # Also update steps_json in session_state if it exists
-if (add_asr or add_dis) and "steps_json" in st.session_state:
+if (add_asr or add_dis or add_summary) and "steps_json" in st.session_state:
     st.session_state["steps_json"]["questions"] = questions
 
 # --- 4. Display Questions Box ---
