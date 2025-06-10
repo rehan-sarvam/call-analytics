@@ -1,5 +1,3 @@
-# streamlit_app.py
-
 import streamlit as st
 import pandas as pd
 import json
@@ -9,6 +7,32 @@ import traceback
 import copy
 import io
 import hashlib
+
+st.title("Call Analytics Creation with Sarvam")
+
+# --- Authentication using st.secrets ---
+USER_CREDENTIALS = st.secrets["USER_CREDENTIALS"]
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+with st.sidebar:
+    st.header("Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    login_button = st.button("Login")
+
+if login_button:
+    if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
+        st.session_state["authenticated"] = True
+        st.success(f"Welcome, {username}!")
+    else:
+        st.error("Invalid username or password")
+
+if not st.session_state.get("authenticated", False):
+    st.stop()
+
+
 # --- 2. Upload CSV & Select Calls ---
 st.header("1. Upload Interaction CSV")
 
@@ -129,7 +153,7 @@ dis_question = {
 # Define new questions: summary only (covers duration and success)
 summary_question = {
     "id": "q_summary",
-    "text": "Provide a concise summary of the call, highlighting the main points, why the call lasted as long as it did, and whether it was successful in achieving its intended outcome.",
+    "text": "A concise summary of the call in 1–2 sentences (30–40 words max) that mentions what the user said and the outcome. Example: 'The user confirmed they will pay before the due date. The bot clearly informed the pending amount and due date.'",
     "type": "short answer"
 }
 
